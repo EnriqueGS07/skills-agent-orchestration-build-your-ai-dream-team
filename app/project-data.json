@@ -1,0 +1,36 @@
+{
+  "projects": [
+    {
+      "name": "Contributor Onboarding",
+      "owner": "Mona",
+      "status": "On track",
+      "recentActivity": "Updated the quick-start guide",
+      "priority": "High",
+      "summary": "Make it easier for new contributors to set up and ship their first change."
+    },
+    {
+      "name": "Accessibility Improvements",
+      "owner": "Jordan Lee",
+      "status": "In progress",
+      "recentActivity": "Reviewed keyboard navigation feedback",
+      "priority": "Medium",
+      "summary": "Address the highest-impact accessibility issues across the contributor experience."
+    },
+    {
+      "name": "Release Notes Refresh",
+      "owner": "Sam Rivera",
+      "status": "At risk",
+      "recentActivity": "Collected updates for the next release",
+      "priority": "High",
+      "summary": "Create concise release notes that help users understand what changed."
+    },
+    {
+      "name": "Documentation Cleanup",
+      "owner": "Alex Chen",
+      "status": "Planning",
+      "recentActivity": "Listed outdated setup instructions",
+      "priority": "Low",
+      "summary": "Identify and improve documentation that is unclear or no longer accurate."
+    }
+  ]
+}

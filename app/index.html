@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A clear, contributor-friendly overview of project status and recent activity.">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="page-main">
+      <header class="page-header">
+        <p class="eyebrow">Team overview</p>
+        <h1>Project Pulse</h1>
+        <p class="page-intro">A quick, contributor-friendly look at what each team is working on and where a hand could help.</p>
+      </header>
+
+      <section aria-labelledby="dashboard-title">
+        <div class="dashboard-heading">
+          <div>
+            <h2 id="dashboard-title">Projects at a glance</h2>
+            <p>Owners, priorities, and the latest updates.</p>
+          </div>
+        </div>
+        <p id="dashboard-announcement" class="page-intro" role="status" aria-live="polite" aria-atomic="true"></p>
+        <div id="dashboard" class="dashboard" aria-busy="true">
+          <p class="loading-state" role="status">Loading project data…</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const requiredFields = ["name", "owner", "status", "recentActivity", "priority", "summary"];
+      const dashboard = document.querySelector("#dashboard");
+      const announcement = document.querySelector("#dashboard-announcement");
+
+      function showState(message, className, role) {
+        const state = document.createElement("p");
+        state.className = className;
+        state.setAttribute("role", role);
+        state.textContent = message;
+        dashboard.replaceChildren(state);
+        dashboard.setAttribute("aria-busy", "false");
+      }
+
+      function normalizeValue(value) {
+        return value.trim().toLowerCase().replace(/\s+/g, "-");
+      }
+
+      function createProjectCard(project, index) {
+        const card = document.createElement("article");
+        card.className = "project-card";
+        card.setAttribute("aria-labelledby", `project-title-${index}`);
+
+        const header = document.createElement("header");
+        header.className = "project-card__header";
+
+        const details = document.createElement("div");
+        const title = document.createElement("h3");
+        title.id = `project-title-${index}`;
+        title.textContent = project.name;
+
+        const owner = document.createElement("p");
+        owner.className = "project-card__owner";
+        owner.append(document.createTextNode("Owner: "));
+        const ownerName = document.createElement("strong");
+        ownerName.textContent = project.owner;
+        owner.append(ownerName);
+        details.append(title, owner);
+
+        const badges = document.createElement("div");
+        const status = document.createElement("span");
+        status.className = "status-badge";
+        status.setAttribute("data-status", normalizeValue(project.status));
+        status.textContent = project.status;
+
+        const priority = document.createElement("span");
+        priority.className = "priority-badge";
+        priority.setAttribute("data-priority", normalizeValue(project.priority));
+        priority.textContent = project.priority;
+        badges.append(status, priority);
+
+        header.append(details, badges);
+
+        const summary = document.createElement("p");
+        summary.className = "project-card__summary";
+        summary.textContent = project.summary;
+
+        const activity = document.createElement("p");
+        activity.className = "project-card__activity";
+        const activityLabel = document.createElement("strong");
+        activityLabel.textContent = "Recent activity: ";
+        activity.append(activityLabel, document.createTextNode(project.recentActivity));
+
+        card.append(header, summary, activity);
+        return card;
+      }
+
+      function validateProjects(data) {
+        if (!data || typeof data !== "object" || !Array.isArray(data.projects)) {
+          return "Project data is invalid: expected a top-level projects array.";
+        }
+
+        for (let index = 0; index < data.projects.length; index += 1) {
+          const project = data.projects[index];
+          for (const field of requiredFields) {
+            if (
+              !project ||
+              typeof project !== "object" ||
+              typeof project[field] !== "string" ||
+              project[field].trim().length === 0
+            ) {
+              return `Project data is invalid: project ${index + 1} must have a non-empty ${field} field.`;
+            }
+          }
+        }
+
+        return null;
+      }
+
+      async function loadProjects() {
+        let response;
+        try {
+          response = await fetch("project-data.json");
+        } catch {
+          showState("Could not load project data. Check your connection and refresh.", "error-state", "alert");
+          return;
+        }
+
+        if (!response.ok) {
+          showState(
+            `Could not load project data (HTTP ${response.status}). Check that project-data.json is available and refresh.`,
+            "error-state",
+            "alert"
+          );
+          return;
+        }
+
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          showState("Project data is not valid JSON. Check project-data.json and refresh.", "error-state", "alert");
+          return;
+        }
+
+        const validationError = validateProjects(data);
+        if (validationError) {
+          showState(validationError, "error-state", "alert");
+          return;
+        }
+
+        if (data.projects.length === 0) {
+          showState("There are no projects to show yet. Check back soon.", "empty-state", "status");
+          return;
+        }
+
+        const cards = data.projects.map(createProjectCard);
+        dashboard.replaceChildren(...cards);
+        dashboard.setAttribute("aria-busy", "false");
+        announcement.textContent = `${cards.length} ${cards.length === 1 ? "project" : "projects"} loaded.`;
+      }
+
+      loadProjects();
+    </script>
+  </body>
+</html>
